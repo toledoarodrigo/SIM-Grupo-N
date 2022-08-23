@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h3>TP1</h3>
+  <form action="{% url 'tp1:generate' %}" method="post" class="row g-5 justify-content-center">
+    {% csrf_token %}
+    <div class="col-12 card card-body shadow h-100">
+      <div class="row">
+        <div class="col-12">
+          <h4>Generador:</h4>
+        </div>
+        <div class="col-4 mb-3" style="max-height: 70px;">
+          <div class="form-check d-block">
+            <input class="form-check-input" onclick="onGeneratorClick(this)" type="radio" name="generator" id="mixed" value="mixed" required>
+            <label class="form-check-label" for="uniform">
+              Mixto
+            </label>
+          </div>
+          <div class="form-check d-block">
+            <input class="form-check-input" onclick="onGeneratorClick(this)" type="radio" name="generator" id="multiplicative" value="multiplicative" required>
+            <label class="form-check-label" for="uniform">
+              Multiplicativo
+            </label>
+          </div>
+          <div class="form-check d-block">
+            <input class="form-check-input" onclick="onGeneratorClick(this)" type="radio" name="generator" id="aditive" value="aditive" required>
+            <label class="form-check-label" for="uniform">
+              Aditivo
+            </label>
+          </div>
+        </div>
+        <div id="seeds">
+            <div class="col mb-3 form-floating">
+              <input type="number" class="form-control form-control-sm" name="seed" id="seed" value="37" placeholder="x0" step="1" min=0>
+              <label for="seed" class="form-label">Semilla</label>
+            </div>
+            <div class="col mb-3 form-floating d-none" id="seed_2_container">
+                <input type="number" class="form-control form-control-sm" name="seed_2" id="seed_2" placeholder="x1" step="1" min=0>
+                <label for="seed_2" class="form-label">Semilla auxiliar</label>
+            </div>
+        </div>
+        <div class="col-6 col-sm-6 col-md-4 mb-3 form-floating" id="c_container">
+            <input type="number" class="form-control form-control-sm" name="c" id="c" placeholder="C" value="7" step="1" min=0>
+            <label for="c" class="form-label">Constante independiente</label>
+        </div>
+        <div class="col-6 col-sm-6 col-md-4 mb-3 form-floating">
+            <input type="number" class="form-control form-control-sm" name="a" id="a" placeholder="a" value="19" step="1" min=0>
+            <label for="c" class="form-label">Constante multiplicadora</label>
+        </div>
+        <div class="col-6 col-sm-6 col-md-4 mb-3 form-floating">
+            <input type="number" class="form-control form-control-sm" name="m" id="m" placeholder="m" value="53" step="1" min=0>
+            <label for="m" class="form-label">Modulo</label>
+        </div>
+
+        <div class="col-6 col-sm-6 col-md-4 mb-3 form-floating">
+          <input type="number" class="form-control form-control-sm" name="n" id="n" placeholder="n" value="1000000" step="1" min=0>
+          <label for="n" class="form-label">Total de iteraciones (N)</label>
+        </div>
+        <div class="col-12 mt-auto text-end">
+          <button type="submit" class="btn btn-outline-primary">Generar</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script lang="js">
+    const onGeneratorClick = (event) => {
+
+    if(!document.querySelector("#seed_2_container").classList.contains("d-none")){
+        document.querySelector("#seed_2_container").classList.add("d-none")
+    }
+    document.querySelector("#c_container").classList.remove("d-none")
+    
+    if (event.value === "multiplicative") {
+      document.querySelector("#c_container").classList.add("d-none")
+      return;
+    }
+    if (event.value === "aditive") {
+      document.querySelector("#seed_2_container").classList.remove("d-none")
+      return;
+    }
+
+  }
+</script>
+{% endblock %}

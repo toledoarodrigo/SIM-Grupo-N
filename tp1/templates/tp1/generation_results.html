@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th rowspan=2>Num.</th>
+                    <th rowspan=2>Xi</th>
+                    <th rowspan=2>Xi-1</th>
+                    <th rowspan=2>Xi+1</th>
+                    <th rowspan=2>ri+1</th>
+                    <th colspan="10">Porcentaje de Ocurrencias</th>
+                  </tr>
+                </thead>
+                <tbody id="results_table">
+                    {% for state in history %}
+                    <tr>
+                      <th scope="row">{{state.0}}</th>
+                      <td>{{state.4}}</td>
+                      <td>{{state.5|default_if_none:'-' }}</td>
+                      <td>{{state.6}}</td>
+                      <td>{{state.7}}</td>
+                      <td>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.0|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.1|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.2|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.3|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.4|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.5|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.6|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.7|floatformat:4}}
+                        </span>
+                        <span class="border-end border-dark px-1">
+                            {{state.9.8|floatformat:4}}
+                        </span>
+                        <span class="px-1">
+                            {{state.9.9|floatformat:4}}
+                        </span>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-12 card card-body shadow h-100">
+            <form class="row" action="{% url 'tp1:generate' %}" method="post" id="form">
+                {% csrf_token %}
+                <div class="col-4">
+                    <span>Generador: {{generator_display}}</span>
+                    <input class="invisible" type="text" name="generator" value="{{generator}}" required>
+                </div>
+                <div class="col-4">
+                    <span>Semilla: {{seed}}</span>
+                    <input class="invisible" type="text" name="seed" value="{{seed}}" required>
+                </div>
+                {% if seed_2 %}
+                <div class="col-4">
+                    <span>Semilla 2: {{seed_2}}</span>
+                    <input class="invisible" type="text" name="seed_2" value="{{seed_2}}" required>
+                </div>
+                {% endif %}
+
+                <div class="col-4">
+                    <span>Constante aditiva: {{a}}</span>
+                    <input class="invisible" type="text" name="a" value="{{a}}" required>
+                </div>
+                {% if c %}
+                <div class="col-4">
+                    <span>Constante independiente: {{c}}</span>
+                    <input class="invisible" type="text" name="c" value="{{c}}" required>
+                </div>
+                {% endif %}
+                <div class="col-4">
+                    <span>Modulo: {{m}}</span>
+                    <input class="invisible" type="text" name="m" value="{{m}}" required>
+                </div>
+                <input class="invisible" type="text" id="history" name="history_amount" value="{{history_amount}}" required>
+                <input class="invisible" type="text" id="iterations" name="iterations" value="{{iterations}}" required>
+                <input class="invisible" type="text" id="total_iterations" name="n" value="{{total_iterations}}" required>
+                <div class="col-12">
+                    <button type="button" class="btn btn-primary" onclick="next20()">Siguientes 20</button>
+                    <button type="button" class="btn btn-primary" onclick="next()">Siguiente</button>
+                    <button type="button" class="btn btn-primary" onclick="next10000()">Proximos 10000</button>
+                    <button type="button" class="btn btn-primary" onclick="finish()">Hasta el final</button>
+                </div>
+            </form>
+        </div>
+        {% if iterations == total_iterations %}
+        <div class="col-12">
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th>Intervalo</th>
+                    <th>Frecuencia Observada</th>
+                    <th>Frecuencia Esperada</th>
+                    <th>Chi</th>
+                    <th>Chi acumulado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for row in chi_cuad %}
+                    <tr>
+                        {% for cell in row %}
+                        {% if forloop.first %}
+                            <th scope="row">{{cell}}</th>
+                            {% else %}
+                            <td scope="row">{{cell}}</td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <span class="d-block">Chi tabulado: {{chi_en_tabla}}</span>
+            <span class="d-block">Chi calculado: {{calculated_chi}}</span>
+            <span class="d-block">Resultado: {{test_result}}</span>
+
+            <img class="img-fluid w-100" id='base64image'
+                src='data:image/jpeg;base64,{{histogram}}' />
+        </div>
+        {% endif %}
+    </div>
+</div>    
+
+{% endblock %}
+{% block scripts %}
+<script>
+    function next20(){
+        const chistory = +document.getElementById("history").getAttribute("value")
+        const citerations = +document.getElementById("iterations").getAttribute("value")
+        document.getElementById("history").setAttribute("value", chistory + 20)
+        document.getElementById("iterations").setAttribute("value", citerations + 20)
+        document.getElementById("form").submit()
+    }
+
+    function next(){
+        const chistory = +document.getElementById("history").getAttribute("value")
+        const citerations = +document.getElementById("iterations").getAttribute("value")
+        document.getElementById("history").setAttribute("value", chistory + 1)
+        document.getElementById("iterations").setAttribute("value", citerations + 1)
+        document.getElementById("form").submit()
+    }
+
+    function next10000(){
+        const chistory = +document.getElementById("history").getAttribute("value")
+        const citerations = +document.getElementById("iterations").getAttribute("value")
+        document.getElementById("history").setAttribute("value", chistory)
+        document.getElementById("iterations").setAttribute("value", citerations + 10000)
+        document.getElementById("form").submit()
+    }
+
+    function finish(){
+        const chistory = +document.getElementById("history").getAttribute("value")
+        const total_iterations = +document.getElementById("total_iterations").getAttribute("value")
+        document.getElementById("history").setAttribute("value", chistory)
+        document.getElementById("iterations").setAttribute("value", total_iterations)
+        document.getElementById("form").submit()
+    }
+
+
+</script>
+{% endblock %}
