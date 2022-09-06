@@ -2,7 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-tp3/
 tp4/
 generation/series_generators/
 

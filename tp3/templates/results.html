@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <h2>TP 3</h2>
+  </div>
+</div>
+<div class="container card card-body shadow my-3 py-4 px-5">
+  <div class="row">
+    <div class="col"><h4>Histograma de frecuencias</h4></div>
+    <div class="col-auto">
+      <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#frequenciesOffcanvas" aria-controls="frequenciesOffcanvas">Tabla de frecuencias</button>
+    </div>
+    <div class="col-12">
+      <canvas id='frequenciesChart' width="1000" height="500"></canvas>
+    </div>
+    <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="frequenciesOffcanvas" aria-labelledby="frequenciesTitle">
+      <div class="offcanvas-header">
+        <h4 class="offcanvas-title" id="frequenciesTitle">Tabla de frecuencias</h4>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Intervalo</th>
+              <th scope="col">Frecuencia esperada</th>
+              <th scope="col">Frecuencia observada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for interval, value in frequencies.items %}
+            <tr>
+              <th scope="row">{% if not isDiscrete %}{{interval.0|floatformat:4}} - {{interval.1|floatformat:4}}{% else %}{{interval.1}}{% endif %}</th>
+              <td>{% if not isDiscrete %}{{value.0|floatformat:4}}{% else %}{{value.0}}{% endif %}</td>
+              <td>{{value.1}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <div class="col"><h4>Numeros generados</h4></div>
+    <div class="col-auto">
+      <span class="my-auto" id="pageLegend"></span>
+      <div class="d-block">
+        <button class="btn btn-sm btn-outline-secondary" onclick="displayItems(1)">&laquo;&laquo;</button>
+        <button id="prevBtn" class="btn btn-sm btn-outline-secondary" onclick="displayItems(1)">&laquo;</button>
+        <button id="nextBtn" class="btn btn-sm btn-outline-secondary" onclick="displayItems(2)">&raquo;</button>
+        <button id="lastBtn" class="btn btn-sm btn-outline-secondary">&raquo;&raquo;</button>
+      </div>
+    </div>
+    <div class="col-12 overflow-scroll" style="max-height: 500px;" id="tableContainer">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Iteracion</th>
+            <th scope="col">Numero generado</th>
+          </tr>
+        </thead>
+        <tbody id='results_table'>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-12">
+      <table class="table">
+          <thead>
+            <tr>
+              <th>Intervalo</th>
+              <th>Frecuencia Observada</th>
+              <th>Frecuencia Esperada</th>
+              <th>Chi</th>
+              <th>Chi acumulado</th>
+            </tr>
+          </thead>
+          <tbody>
+              {% for row in chi_cuad %}
+              <tr>
+                  {% for cell in row %}
+                  {% if forloop.first %}
+                      <th scope="row">{{cell}}</th>
+                      {% else %}
+                      <td scope="row">{{cell}}</td>
+                  {% endif %}
+                  {% endfor %}
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+      <span class="d-block">Chi tabulado: {{chi_en_tabla}}</span>
+      <span class="d-block">Chi calculado: {{calculated_chi}}</span>
+      <span class="d-block">Resultado: {{test_result}}</span>
+  </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const items = JSON.parse('{{history_str|safe}}');
+  let showFrom = 0;
+  let showTo = 5000;
+  let pageSize = 5000;
+  let pagesAmount = Math.ceil(items.length/pageSize);
+  document.getElementById("lastBtn").setAttribute("onclick", `displayItems(${pagesAmount})`);
+
+  const displayItems = (page) => {
+    if (page === undefined) {
+      return
+    }
+    const table = document.getElementById('results_table');
+    showFrom = pageSize * (page - 1);
+    showTo = pageSize * page;
+    const paginatedItems = items.slice(showFrom, showTo);
+    results = "";
+    paginatedItems.forEach(({iteration, generated_number}) => {
+      results += `<tr>
+        <th scope="row">${iteration}</th>
+        <td>${generated_number}</td>
+      </tr>`
+    });
+    table.innerHTML = results;
+    document.getElementById("pageLegend").innerHTML = `Pagina ${page} de ${pagesAmount} paginas`;
+    document.getElementById("nextBtn").setAttribute("onclick", `displayItems(${page < pagesAmount ? page + 1 : page})`);
+    document.getElementById("prevBtn").setAttribute("onclick", `displayItems(${page === 1 ? undefined : page - 1})`);
+    document.getElementById("tableContainer").scrollTop = 0;
+  }
+
+  displayItems(1)
+
+  const data = [{% for exp_value, value in values%}{{value}},{% endfor%}]
+  const labels = [{% for label in labels%}"{% if not isDiscrete %}{{label.0|floatformat:4}}{% else %}{{label.0}}{% endif %}",{% if forloop.last %}"{% if not isDiscrete %}{{label.1|floatformat:4}}{% else %}{{label.1}}{% endif %}"{%endif%}{% endfor %}]
+
+  const tooltip_title = (context) => {
+    return `${labels[context[0].index]} - ${labels[context[0].index+1]}`
+  }
+
+  const ctx = document.getElementById('frequenciesChart').getContext('2d');
+  {% if not isDiscrete %}
+  const myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Frecuencias observadas',
+          data: data,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor:'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        tooltips: {
+          callbacks: { title: tooltip_title }
+        },
+        scales: {
+          xAxes: [{
+              display: false,
+              barPercentage: 1.265,
+              ticks: {
+                  max: labels[labels.length - 2],
+              }
+            }, {
+              display: true,
+              ticks: {
+                  autoSkip: false,
+                  max: labels[labels.length - 1],
+              },
+            }],
+          yAxes: [{
+            ticks: {
+              beginAtZero:true
+            }
+          }]
+        }
+      }
+  });
+  {% else %}
+  const myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Frecuencias observadas',
+          data: data,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor:'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        tooltips: {
+          callbacks: { title: tooltip_title }
+        },
+        scales: {
+          xAxes: [{
+              display: true,
+              ticks: {
+                  max: labels[labels.length - 1],
+              }
+            }],
+          yAxes: [{
+            ticks: {
+              beginAtZero:true
+            }
+          }]
+        }
+      }
+  });
+  {% endif %}
+</script>
+{% endblock %}

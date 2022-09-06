@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'core',
     'generation',
     'tp1',
+    'tp3'
 ]
 
 MIDDLEWARE = [
