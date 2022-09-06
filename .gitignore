@@ -3,7 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 tp4/
-generation/series_generators/
 
 # C extensions
 *.so
