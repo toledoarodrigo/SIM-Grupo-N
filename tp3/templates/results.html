@@ -36,7 +36,7 @@
             {% for interval, value in frequencies.items %}
             <tr>
               <th scope="row">{% if not isDiscrete %}{{interval.0|floatformat:4}} - {{interval.1|floatformat:4}}{% else %}{{interval.1}}{% endif %}</th>
-              <td>{% if not isDiscrete %}{{value.0|floatformat:4}}{% else %}{{value.0}}{% endif %}</td>
+              <td>{{value.0}}</td>
               <td>{{value.1}}</td>
             </tr>
             {% endfor %}

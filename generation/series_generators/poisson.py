@@ -24,4 +24,4 @@ class PoissonNumberGenerator(BaseSeriesGenerator):
     
     def get_expected_frequency(self, interval, sample_size, **kwargs):
         class_mark = int(interval[0])
-        return (((self.mean ** class_mark)/math.factorial(class_mark))*(math.e **(-self.mean)))*sample_size
+        return int((((self.mean ** class_mark)/math.factorial(class_mark))*(math.e **(-self.mean)))*sample_size)

@@ -27,4 +27,4 @@ class ExponentialNumberGenerator(BaseSeriesGenerator):
         interval_size = (interval[1] - interval[0])
         class_mark = (interval[0] + interval[1])/2
         lambda_value = 1 / self.mean
-        return lambda_value * euler(-lambda_value*class_mark)*interval_size*sample_size
+        return int(lambda_value * euler(-lambda_value*class_mark)*interval_size*sample_size)

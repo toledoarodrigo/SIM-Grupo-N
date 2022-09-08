@@ -35,6 +35,7 @@ def generate_series(request):
     is_discrete = data.get("distribution") == POISSON
     distribution_generator_class = DISTRIBUTION_MAPPING[data.get("distribution")]
     distribution_arguments = [int(data.get("decimal_places", 4)), LanguajeRandomGenerator(), *data.getlist(f"{data.get('distribution')}_args")]
+    # Inicializaion del generador de numeros aleatorios segun lo elegido en el Front end.
     distribution_generator = NumberGeneratorHandler.instantiate_distribution_generator(distribution_generator_class, *distribution_arguments)
     number_generator = NumberGeneratorHandler(
         distribution_generator,
@@ -47,18 +48,22 @@ def generate_series(request):
     number_generator.run()
     import json
 
+    # Inicia test de chi cuadrado
     observed_frequencies = []
     expected_frequencies = []
     intervals = []
     for interval, value in number_generator.frequencies.items():
-        observed, expected = value
+        expected, observed = value
         observed_frequencies.append(observed)
         expected_frequencies.append(expected)
         intervals.append(interval)
-
-    chi_cuad = chi_cuadrado(observed_frequencies, int(data['intervals_amount']), expected_frequencies, int(data.get("decimal_places", 4)))
+    # Armado de tabla de chi cuadarado
+    chi_cuad = chi_cuadrado(observed_frequencies, int(data['intervals_amount']), expected_frequencies, int(data.get("decimal_places", 4)), intervals_list=intervals)
+    # Chi tabluado
     chi_en_tabla = obtener_chi_tabla(int(data['intervals_amount']))
+    # Chi calculado
     last_chi = chi_cuad[-1][-1]
+    # Obtengo el resultado del test de chi (Rechaza/No Rechaza)
     test_result = get_chi_test_result(chi_cuad, chi_en_tabla)
 
     return render(request, 'results.html', {

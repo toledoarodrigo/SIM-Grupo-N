@@ -72,16 +72,25 @@ class TP3NumberGeneratorHandler(NumberGeneratorHandler):
         prev_element = None
         for i in range(self.sample_size):
             if len(self.state_vector) > 0:
+                # Obtener la ultima iteracion del vector de estado
                 prev_element = self.state_vector[0]
             iteration_number = i + 1
+            # Generacion de numero random que respeta una distribucion en particular
             generated_number = self.number_generator.generate_number()
+            # Se generan los datos necesarios para continuar con las iteraciones
             parsed_iteration = self.build_iterartion_data(iteration_number, generated_number, prev_element)
             if len(self.state_vector) > 1:
+                # Elimino la iteracion mas vieja del vector de estado
                 self.state_vector.pop()
+            # Agrego iteracion actual al vector de estado
             self.state_vector.insert(0, parsed_iteration)
+            # Corre validacion para saber si se deberia guardar la iteracion como dato historico
             history_item = self.history_selector(parsed_iteration)
             if history_item is not None:
+                # Agrego un item al vector historial
                 self.history.append(history_item)
+        # Armado de las frecuencias esperadas y las observadas inicializadas en cero
         self.frequencies = self.build_observed_frequencies()
         for item in self.history:
+            # Se hace el conteo para cada intervalo
             self.frequencies = self.count_observed_frequency(item['generated_number'], self.frequencies, self.isDiscrete)

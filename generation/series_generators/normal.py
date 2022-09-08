@@ -37,4 +37,4 @@ class NormalNumberGenerator(BaseSeriesGenerator):
     def get_expected_frequency(self, interval, sample_size, **kwargs):
         interval_size = (interval[1] - interval[0])
         class_mark = (interval[0] + interval[1])/2
-        return (1/(self.standard_deviation*sqrt(2*pi))*euler((-0.5)*((class_mark-self.mean)/self.standard_deviation)**2))*interval_size*sample_size
+        return int((1/(self.standard_deviation*sqrt(2*pi))*euler((-0.5)*((class_mark-self.mean)/self.standard_deviation)**2))*interval_size*sample_size)

@@ -19,4 +19,4 @@ class UniformNumberGenerator(BaseSeriesGenerator):
     
     def get_expected_frequency(self, interval, sample_size, **kwargs):
         intervals_amount = kwargs['intervals_amount']
-        return sample_size / intervals_amount
+        return int(sample_size / intervals_amount)
